@@ -1,0 +1,35 @@
+--- Entities/Transport/Transport.cpp.before_animkick	2026-11-06 10:30:42.936502400 -0500
++++ Entities/Transport/Transport.cpp	2026-11-06 10:30:43.102341100 -0500
+@@ -319,6 +319,12 @@
+         }
+     }
+ 
++    if (_animKickN)
++    {
++        if (diff >= _animKickT) { SetGoState(GO_STATE_READY); --_animKickN; _animKickT = 3000; } // next tick re-sets ACTIVE while moving
++        else _animKickT -= diff;
++    }
++
+     sScriptMgr->OnTransportUpdate(this, diff);
+ }
+ 
+@@ -721,6 +727,8 @@
+     GetMap()->AddToMap<Transport>(this);
+ 
+     LoadStaticPassengers();
++
++    if (GetEntry() == 9900101 || GetEntry() == 9900102) { _animKickN = 2; _animKickT = 3000; }
+ }
+ 
+ void MotionTransport::UpdatePassengerPositions(PassengerSet& passengers)
+--- Entities/Transport/Transport.h.before_animkick	2026-11-06 10:30:42.970772700 -0500
++++ Entities/Transport/Transport.h	2026-11-06 10:30:46.893471600 -0500
+@@ -111,6 +111,8 @@
+     mutable std::mutex Lock;
+     bool _passengersLoaded;
+     bool _delayedTeleport;
++    uint32 _animKickT = 0; // ferry animation workaround after map teleport
++    uint8 _animKickN = 0;
+ 
+     bool _requiresFirstDepartureSync;
+     std::chrono::system_clock::time_point _firstDepartureTime;
