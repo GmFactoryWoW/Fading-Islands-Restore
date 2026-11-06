@@ -23,6 +23,10 @@ This repo holds only the Fading Island work, not the client or the server.
 | `server/core-patches/` | two small core patches (see below) |
 | `tools/`, `data/` | generator scripts (hardcoded local paths: reference only) |
 
+## Standalone full-map client patch (any 3.3.5a client)
+`patch-ZZZZZB.MPQ` (727 MB, release asset) is self-contained: all 118 map tiles + WDT/WDL, the fixed goblin ships, the DBC changes, plus every model (M2/skins/anims), WMO and texture the map references, taken from the CoA client. Drop it in `Data/` and the full Fading Island (map 907) loads without CoA's other patches. Nothing else is needed on the client. (`patch-ZZZZZA.MPQ` is the small version for clients that already have the base map assets.)
+About 380 doodads referenced by the map do not exist in the CoA client either, so they stay invisible; see `data/models-missing-from-client.txt`.
+
 ## Install
 Release assets: `patch-ZZZZZA.MPQ` (client) and `FadingIslandsRestore-v1.0.zip` (everything).
 1. Client: put `patch-ZZZZZA.MPQ` in `Data/`. The client moves transports from its own DBC copy, so it must match the server.
