@@ -27,6 +27,10 @@ This repo holds only the Fading Island work, not the client or the server.
 `patch-ZZZZZB.MPQ` (727 MB, release asset) is self-contained: all 118 map tiles + WDT/WDL, the fixed goblin ships, the DBC changes, plus every model (M2/skins/anims), WMO and texture the map references, taken from the CoA client. Drop it in `Data/` and the full Fading Island (map 907) loads without CoA's other patches. Nothing else is needed on the client. (`patch-ZZZZZA.MPQ` is the small version for clients that already have the base map assets.)
 About 380 doodads referenced by the map do not exist in the CoA client either, so they stay invisible; see `data/models-missing-from-client.txt`.
 
+## Editing in Noggit
+`FadingIsland-Noggit-Project-v1.0.zip` is the project folder, made with ShadowWorld-Noggit v1.4.6 (the fork that loads `patch-[4-9]/[A-Z]` archives). Put `patch-ZZZZZB.MPQ` in your Noggit client's `Data/`, set `ClientPath` in `Fading island.noggitproj`, open it. Keep `uid.ini`. Ground-effect doodads, textures and models are all bundled in ZZZZZB.
+`FadingIsland-OptionalClientDBCs-v1.0.zip`: the client DBCs holding map 907 rows (Map, AreaTable, Light*, ...), only for clients that lack them.
+
 ## Install
 Release assets: `patch-ZZZZZA.MPQ` (client) and `FadingIslandsRestore-v1.0.zip` (everything).
 1. Client: put `patch-ZZZZZA.MPQ` in `Data/`. The client moves transports from its own DBC copy, so it must match the server.
