@@ -1,5 +1,7 @@
 # Fading Islands Restore
 
+![Fading Island](images/fading-island.jpg)
+
 Restores the Fading Island (map 907) for a WoW 3.3.5a / CoA server:
 
 - **2 working boats** – Booty Bay <-> Hardluck and Ratchet <-> Hardluck (goblin ships, GO 9900101 / 9900102, taxi paths 2001 / 2002)
