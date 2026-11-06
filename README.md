@@ -30,4 +30,6 @@ Release assets: `patch-ZZZZZA.MPQ` (client) and `FadingIslandsRestore-v1.0.zip` 
 Core patches: `transport-animation-kick` (makes the custom transports start animating) and `ferry-detach-on-fall` (detaches players who fall off the ship).
 
 ## Credits / notes
+Made by jealous-sound (CoA server project) with Claude Code.
+
 Game assets belong to Blizzard Entertainment. Goblin ship model from the WoW client, scaled and fixed with the included tools. Built for the CoA server project.
