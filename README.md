@@ -28,7 +28,7 @@ This repo holds only the Fading Island work, not the client or the server.
 About 380 doodads referenced by the map do not exist in the CoA client either, so they stay invisible; see `data/models-missing-from-client.txt`.
 
 ## Editing in Noggit
-`FadingIsland-Noggit-Project-v1.0.zip` is the project folder, made with ShadowWorld-Noggit v1.4.6 (the fork that loads `patch-[4-9]/[A-Z]` archives). Put `patch-ZZZZZB.MPQ` in your Noggit client's `Data/`, set `ClientPath` in `Fading island.noggitproj`, open it. Keep `uid.ini`. Ground-effect doodads, textures and models are all bundled in ZZZZZB.
+`FadingIsland-Noggit-Project-v1.0.zip` is the project folder, made with ShadowWorld-Noggit v1.4.6 (the fork that loads `patch-[4-9]/[A-Z]` archives). Put `patch-ZZZZZB.MPQ` in your Noggit client's `Data/`, set `ClientPath` in `Fading island.noggitproj`, open it. Keep `uid.ini`. Note: the project still contains the static Ironforge elevator doodad (tile 39_27) you placed as a visual marker; the working elevator is a server transport, so the client patch shrinks that static copy to nothing. Do the same (or delete it) before exporting tiles, or you will see two elevators. Ground-effect doodads, textures and models are all bundled in ZZZZZB.
 `FadingIsland-OptionalClientDBCs-v1.0.zip`: the client DBCs holding map 907 rows (Map, AreaTable, Light*, ...), only for clients that lack them.
 
 ## Install
