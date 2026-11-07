@@ -16,14 +16,14 @@ print('tiles taken from your Noggit project:',n)
 
 # the elevator doodad is replaced by the moving server transport: shrink the static copy to nothing
 import json,struct
-if os.path.exists('C:/CoA-Build/boats/elevator.json'):
-    el=json.load(open('C:/CoA-Build/boats/elevator.json'));fn='C:/CoA-Build/boats/out/adt/AzzarArchipelago_%s.adt'%el['tile']
+for el in (json.load(open('C:/CoA-Build/boats/elevscan.json')) if os.path.exists('C:/CoA-Build/boats/elevscan.json') else []):
+    fn='C:/CoA-Build/boats/out/adt/AzzarArchipelago_%s.adt'%el['tile']
     if os.path.exists(fn):
         d=bytearray(open(fn,'rb').read());i=0
         while i<len(d):
             t=bytes(d[i:i+4])[::-1];sz=struct.unpack_from('<I',d,i+4)[0]
             if t==b'MDDF':
                 for k in range(sz//36):
-                    if struct.unpack_from('<I',d,i+8+k*36+4)[0]==el['uid']:struct.pack_into('<H',d,i+8+k*36+32,1);print('static elevator doodad hidden in tile',el['tile'])
+                    if struct.unpack_from('<I',d,i+8+k*36+4)[0]==el['uid']:struct.pack_into('<H',d,i+8+k*36+32,1);print('static elevator doodad hidden in tile',el['tile'],el['model'].split(chr(92))[-1])
             i+=8+sz
         open(fn,'wb').write(d)

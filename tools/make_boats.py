@@ -71,23 +71,28 @@ for k, route in routes.items():
         nodes.append([nid, PATH_IDS[k], i, m, f2u(x), f2u(y), f2u(z), af, dl, ev, 0]); nid += 1
     paths.append([PATH_IDS[k], 34, 80, 0])
 
-# --- Fading Island elevator (user's Noggit doodad ironforgeelevator.m2 as a moving transport: straight up to the top floor, stops, comes back) ---
+# --- Fading Island elevators (Noggit doodads as moving transports: straight up to the top floor, stop, come back) ---
 import json as _jj
-EL_PATH, EL_GO, EL_DISPLAY = 2003, 9900110, 561
-EL = _jj.load(open(B + 'elevator.json')) if os.path.exists(B + 'elevator.json') else None
-EL_TOP_FLOOR = 190.2109        # player's feet height at the top (.gps)
-EL_FLOOR_OFF = 1.1             # platform floor above the model origin (collision mesh), before scale
 EL_WAIT = 20
-if EL:
-    z0 = EL['z']; z1 = EL_TOP_FLOOR - EL_FLOOR_OFF * EL['scale']
-    o_t = math.radians(EL['rotY'] + 180.0)           # server orientation of the doodad (derived from Noggit's model matrix: rotY + 180 deg)
+# model suffix -> path id, GO entry, GODI display id, floor height above the model origin (collision mesh, before scale), top floor feet z (None = ironforge .gps), speed, name
+ELEVS = [('ironforgeelevator.m2', 2003, 9900110, 561, 1.1, 190.2109, 22, 'Fading Island Elevator'),
+         ('cf_elevatorplatform.m2', 2004, 9900111, 7043, 1.5, 390.0, 63, 'Fading Island Elevator (Coilfang)'),
+         ('fading_island_valkyr_entrance_elevator_01.m2', 2005, 9900112, 1041789, 0.5, 891.0, 27, 'Fading Island Elevator (Valkyr Entrance)')]
+_scan = _jj.load(open(B + 'elevscan.json')) if os.path.exists(B + 'elevscan.json') else []
+ELS = []
+for (suf, pid, go, disp, foff, top, spd, nm) in ELEVS:
+    m = [e for e in _scan if e['model'].endswith(suf)]
+    if m: ELS.append((m[0], pid, go, disp, foff, top, spd, nm))
+for (EL, EL_PATH, EL_GO, EL_DISPLAY, foff, top, spd, nm) in ELS:
+    z0 = EL['z']; z1 = top - foff * EL['scale']
+    o_t = math.radians(EL['rot'][1] + 180.0)         # server orientation of the doodad (derived from Noggit's model matrix: rotY + 180 deg)
     ua = o_t - math.pi                              # the core faces atan2(dir)+pi: a tiny drift along this direction keeps the yaw fixed
     ux, uy = math.cos(ua), math.sin(ua)
     nodes = [r for r in nodes if r[1] != EL_PATH]; paths = [r for r in paths if r[0] != EL_PATH]
     nid = max(r[0] for r in nodes) + 1
-    # few long segments with a drift of 5 cm per step (a smaller step is lost in float precision at x~2279 and the yaw jitters = shaking)
+    # few long segments with a drift of 5 cm per step (a smaller step is lost in float precision and the yaw jitters = shaking)
     D = 0.05
-    seq = [(0.0, z0, 0, 0), (D, z0 + 0.05, 2, EL_WAIT), (2 * D, z1, 2, EL_WAIT), (3 * D, (z0 + z1) / 2, 0, 0), (4 * D, z0 + 0.05, 0, 0), (5 * D, z0 + 0.05, 0, 0)]   # the core drops the last node's segment: the real bottom is the one before it   # bottom stop is not first/last frame (the core ignores those)
+    seq = [(0.0, z0, 0, 0), (D, z0 + 0.05, 2, EL_WAIT), (2 * D, z1, 2, EL_WAIT), (3 * D, (z0 + z1) / 2, 0, 0), (4 * D, z0 + 0.05, 0, 0), (5 * D, z0 + 0.05, 0, 0)]   # the core drops the last node's segment: the real bottom is the one before it; the bottom stop is not the first/last frame (the core ignores those)
     for i, (e, z, af, dl) in enumerate(seq):
         nodes.append([nid, EL_PATH, i, 907, f2u(EL['x'] + ux * e), f2u(EL['y'] + uy * e), f2u(z), af, dl, 0, 0]); nid += 1
     paths.append([EL_PATH, 34, 80, 0])
@@ -105,11 +110,11 @@ for k in routes:
     sql.append("INSERT INTO transports (guid,entry,name,ScriptName) SELECT IFNULL(MAX(guid),0)+1,%d,'%s','' FROM transports;" % (GO_IDS[k], names[k]))
 
 
-if EL:
+for (EL, EL_PATH, EL_GO, EL_DISPLAY, foff, top, spd, nm) in ELS:
     sql += ["DELETE FROM gameobject_template WHERE entry=%d;" % EL_GO, "DELETE FROM gameobject_template_addon WHERE entry=%d;" % EL_GO, "DELETE FROM transports WHERE entry=%d;" % EL_GO,
-            "INSERT INTO gameobject_template (entry,type,displayId,name,IconName,castBarCaption,unk1,size,Data0,Data1,Data2,Data3,Data4,Data5,Data6,AIName,ScriptName,VerifiedBuild) VALUES (%d,15,%d,'Fading Island Elevator','','','',%.4f,%d,22,1,0,0,1,0,'','',12340);" % (EL_GO, EL_DISPLAY, EL['scale'], EL_PATH),
+            "INSERT INTO gameobject_template (entry,type,displayId,name,IconName,castBarCaption,unk1,size,Data0,Data1,Data2,Data3,Data4,Data5,Data6,AIName,ScriptName,VerifiedBuild) VALUES (%d,15,%d,'%s','','','',%.4f,%d,%d,1,0,0,1,0,'','',12340);" % (EL_GO, EL_DISPLAY, nm, EL['scale'], EL_PATH, spd),
             "INSERT INTO gameobject_template_addon (entry,faction,flags,mingold,maxgold,artkit0,artkit1,artkit2,artkit3) VALUES (%d,0,40,0,0,0,0,0,0);" % EL_GO,
-            "INSERT INTO transports (guid,entry,name,ScriptName) SELECT IFNULL(MAX(guid),0)+1,%d,'Fading Island Elevator','' FROM transports;" % EL_GO]
+            "INSERT INTO transports (guid,entry,name,ScriptName) SELECT IFNULL(MAX(guid),0)+1,%d,'%s','' FROM transports;" % (EL_GO, nm)]
 
 HOME_NAME = {'booty': 'Booty Bay', 'ratchet': 'Ratchet'}
 _SC = "INSERT INTO smart_scripts (entryorguid,source_type,id,link,event_type,event_phase_mask,event_chance,event_flags,event_param1,event_param2,event_param3,event_param4,event_param5,event_param6,action_type,action_param1,action_param2,action_param3,action_param4,action_param5,action_param6,target_type,target_param1,target_param2,target_param3,target_param4,target_x,target_y,target_z,target_o,comment) VALUES (%d,%d,%d,0,%d,0,100,0,%d,%d,%d,%d,0,0,%d,%d,%d,0,0,0,0,1,0,0,0,0,0,0,0,0,'%s');"
