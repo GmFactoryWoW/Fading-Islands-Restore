@@ -8,6 +8,7 @@ Restores the Fading Island (map 907) for a WoW 3.3.5a / CoA server:
 - **3 working elevators** replacing static Noggit doodads: Ironforge-style (GO 9900110, path 2003), Coilfang platform (GO 9900111, path 2004, up the cliff to z 390) and Valkyr entrance (GO 9900112, path 2005, up to z 891)
 - **Goblin passenger NPCs on the boats** (party outfits, random dance/emotes/voices). No allied or hostile NPCs on the island itself
 - **Map edits** (31 ADT tiles) with the missing-texture cubes and floating blocks removed
+- **Spirit healer** on the island (same gossip/resurrection as every other spirit healer); dying on the island releases you there
 - **All teleport points** for map 907 (32 `game_tele` rows)
 - Scripts used to generate everything (`tools/`)
 
@@ -20,7 +21,7 @@ This repo holds only the Fading Island work, not the client or the server.
 | `server/dbc/` | `TaxiPath.dbc`, `TaxiPathNode.dbc` (server copy) |
 | `server/sql/hardluck_ferries.sql` | boats, elevator, NPCs, SmartAI |
 | `server/sql/fading_islands_teleports.sql` | map 907 teleports |
-| `server/core-patches/` | two small core patches (see below) |
+| `server/core-patches/` | three small core patches (see below) |
 | `tools/`, `data/` | generator scripts (hardcoded local paths: reference only) |
 
 ## Standalone full-map client patch (any 3.3.5a client)
@@ -37,7 +38,7 @@ Release assets: `patch-ZZZZZA.MPQ` (client) and `FadingIslandsRestore-v1.0.zip` 
 2. Server: copy `server/dbc/*.dbc` into your server `dbc` folder, apply both SQL files to the world DB, apply the core patches and rebuild.
 3. Restart the server; `.tele FadingIsland` to visit.
 
-Core patches: `transport-animation-kick` (makes the custom transports start animating) and `ferry-detach-on-fall` (detaches players who fall off the ship).
+Core patches: `island-graveyard-zone0` (graveyards for map 907, which has no zone/area), `transport-animation-kick` (makes the custom transports start animating) and `ferry-detach-on-fall` (detaches players who fall off the ship).
 
 ## Credits / notes
 jealous-sound, the CoAC team, svenbledt and Pitho.

@@ -75,26 +75,44 @@ for k, route in routes.items():
 import json as _jj
 EL_WAIT = 20
 # model suffix -> path id, GO entry, GODI display id, floor height above the model origin (collision mesh, before scale), top floor feet z (None = ironforge .gps), speed, name
-ELEVS = [('ironforgeelevator.m2', 2003, 9900110, 561, 1.1, 190.2109, 22, 'Fading Island Elevator'),
-         ('cf_elevatorplatform.m2', 2004, 9900111, 7043, 1.5, 390.0, 63, 'Fading Island Elevator (Coilfang)'),
-         ('fading_island_valkyr_entrance_elevator_01.m2', 2005, 9900112, 1041789, 0.5, 891.0, 27, 'Fading Island Elevator (Valkyr Entrance)')]
+ELEVS = [dict(suf='ironforgeelevator.m2', pid=2003, go=9900110, disp=561, foff=1.1, top=190.2109, spd=22, nm='Fading Island Elevator', legacy=True),
+         dict(suf='cf_elevatorplatform.m2', pid=2004, go=9900111, disp=7043, foff=1.5, top=352.9547, spd=63, nm='Fading Island Elevator (Coilfang)', scale=0.55, topxy=(2770.644, -4119.61)),
+         dict(suf='fading_island_valkyr_entrance_elevator_01.m2', pid=2005, go=9900112, disp=1041789, foff=0.5, top=897.0, spd=27, nm='Fading Island Elevator (Valkyr Entrance)')]
 _scan = _jj.load(open(B + 'elevscan.json')) if os.path.exists(B + 'elevscan.json') else []
 ELS = []
-for (suf, pid, go, disp, foff, top, spd, nm) in ELEVS:
-    m = [e for e in _scan if e['model'].endswith(suf)]
-    if m: ELS.append((m[0], pid, go, disp, foff, top, spd, nm))
-for (EL, EL_PATH, EL_GO, EL_DISPLAY, foff, top, spd, nm) in ELS:
+for c in ELEVS:
+    m = [e for e in _scan if e['model'].endswith(c['suf'])]
+    if m:
+        e = dict(m[0])
+        if 'scale' in c:      # smaller model: keep the floor where it was
+            e['z'] += c['foff'] * (e['scale'] - c['scale']); e['scale'] = c['scale']
+        ELS.append((e, c['pid'], c['go'], c['disp'], c['foff'], c['top'], c['spd'], c['nm'], c))
+for (EL, EL_PATH, EL_GO, EL_DISPLAY, foff, top, spd, nm, cfg) in ELS:
     z0 = EL['z']; z1 = top - foff * EL['scale']
-    o_t = math.radians(EL['rot'][1] + 180.0)         # server orientation of the doodad (derived from Noggit's model matrix: rotY + 180 deg)
-    ua = o_t - math.pi                              # the core faces atan2(dir)+pi: a tiny drift along this direction keeps the yaw fixed
-    ux, uy = math.cos(ua), math.sin(ua)
     nodes = [r for r in nodes if r[1] != EL_PATH]; paths = [r for r in paths if r[0] != EL_PATH]
     nid = max(r[0] for r in nodes) + 1
-    # few long segments with a drift of 5 cm per step (a smaller step is lost in float precision and the yaw jitters = shaking)
-    D = 0.05
-    seq = [(0.0, z0, 0, 0), (D, z0 + 0.05, 2, EL_WAIT), (2 * D, z1, 2, EL_WAIT), (3 * D, (z0 + z1) / 2, 0, 0), (4 * D, z0 + 0.05, 0, 0), (5 * D, z0 + 0.05, 0, 0)]   # the core drops the last node's segment: the real bottom is the one before it; the bottom stop is not the first/last frame (the core ignores those)
-    for i, (e, z, af, dl) in enumerate(seq):
-        nodes.append([nid, EL_PATH, i, 907, f2u(EL['x'] + ux * e), f2u(EL['y'] + uy * e), f2u(z), af, dl, 0, 0]); nid += 1
+    if cfg.get('legacy'):
+        o_t = math.radians(EL['rot'][1] + 180.0)         # server orientation of the doodad (derived from Noggit's model matrix: rotY + 180 deg)
+        ua = o_t - math.pi                              # the core faces atan2(dir)+pi: a tiny drift along this direction keeps the yaw fixed
+        ux, uy = math.cos(ua), math.sin(ua)
+        D = 0.05    # a smaller drift step is lost in float precision and the yaw jitters = shaking
+        seq = [(0.0, z0, 0, 0), (D, z0 + 0.05, 2, EL_WAIT), (2 * D, z1, 2, EL_WAIT), (3 * D, (z0 + z1) / 2, 0, 0), (4 * D, z0 + 0.05, 0, 0), (5 * D, z0 + 0.05, 0, 0)]
+        pts = [(EL['x'] + ux * e, EL['y'] + uy * e, z, af, dl) for (e, z, af, dl) in seq]
+    else:
+        # evenly spaced collinear nodes, mirrored around both stops (a spline through a reversal overshoots: that was the rise-then-drop and the shaking)
+        # the core drops the last node's segment and ignores a stop on the first/last frame
+        L = z1 - z0; g = 0.3 / L
+        fr = [(g, 0, 0), (0, 2, EL_WAIT), (g, 0, 0), (1 / 3, 0, 0), (2 / 3, 0, 0), (1 - g, 0, 0), (1, 2, EL_WAIT), (1 - g, 0, 0), (2 / 3, 0, 0), (1 / 3, 0, 0), (g, 0, 0), (g, 0, 0)]
+        pts = []
+        if 'topxy' in cfg:   # slanted shaft: the platform follows the line from its spot to the top spot (the yaw then follows the travel direction)
+            for (f, af, dl) in fr:
+                pts.append((EL['x'] + (cfg['topxy'][0] - EL['x']) * f, EL['y'] + (cfg['topxy'][1] - EL['y']) * f, z0 + L * f, af, dl))
+        else:                # vertical: a 5 cm drift per node along the doodad's own yaw keeps the model's yaw fixed (the core faces atan2(dir)+pi)
+            ua = math.radians(EL['rot'][1] + 180.0) - math.pi; ux, uy = math.cos(ua), math.sin(ua)
+            for i, (f, af, dl) in enumerate(fr):
+                pts.append((EL['x'] + ux * 0.05 * i, EL['y'] + uy * 0.05 * i, z0 + L * f, af, dl))
+    for i, (x, y, z, af, dl) in enumerate(pts):
+        nodes.append([nid, EL_PATH, i, 907, f2u(x), f2u(y), f2u(z), af, dl, 0, 0]); nid += 1
     paths.append([EL_PATH, 34, 80, 0])
 nodes.sort(key=lambda r: r[0]); paths.sort(key=lambda r: r[0])
 os.makedirs(B + 'out', exist_ok=True)
@@ -110,7 +128,7 @@ for k in routes:
     sql.append("INSERT INTO transports (guid,entry,name,ScriptName) SELECT IFNULL(MAX(guid),0)+1,%d,'%s','' FROM transports;" % (GO_IDS[k], names[k]))
 
 
-for (EL, EL_PATH, EL_GO, EL_DISPLAY, foff, top, spd, nm) in ELS:
+for (EL, EL_PATH, EL_GO, EL_DISPLAY, foff, top, spd, nm, cfg) in ELS:
     sql += ["DELETE FROM gameobject_template WHERE entry=%d;" % EL_GO, "DELETE FROM gameobject_template_addon WHERE entry=%d;" % EL_GO, "DELETE FROM transports WHERE entry=%d;" % EL_GO,
             "INSERT INTO gameobject_template (entry,type,displayId,name,IconName,castBarCaption,unk1,size,Data0,Data1,Data2,Data3,Data4,Data5,Data6,AIName,ScriptName,VerifiedBuild) VALUES (%d,15,%d,'%s','','','',%.4f,%d,%d,1,0,0,1,0,'','',12340);" % (EL_GO, EL_DISPLAY, nm, EL['scale'], EL_PATH, spd),
             "INSERT INTO gameobject_template_addon (entry,faction,flags,mingold,maxgold,artkit0,artkit1,artkit2,artkit3) VALUES (%d,0,40,0,0,0,0,0,0);" % EL_GO,
