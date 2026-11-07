@@ -5,7 +5,7 @@
 Restores the Fading Island (map 907) for a WoW 3.3.5a / CoA server:
 
 - **2 working boats** – Booty Bay <-> Hardluck and Ratchet <-> Hardluck (goblin ships, GO 9900101 / 9900102, taxi paths 2001 / 2002)
-- **3 working elevators** replacing static Noggit doodads: Ironforge-style (GO 9900110, path 2003), Coilfang platform (GO 9900111, path 2004, up the cliff to z 390) and Valkyr entrance (GO 9900112, path 2005, up to z 891)
+- **4 working elevators** replacing static Noggit doodads: Ironforge-style (GO 9900110, path 2003), Coilfang platform (GO 9900111, path 2004, up the cliff to z 390) Valkyr entrance (GO 9900112, path 2005, up to z 897) and Orgrimmar depths (GO 9900113, path 2006, up to z 297)
 - **Goblin passenger NPCs on the boats** (party outfits, random dance/emotes/voices). No allied or hostile NPCs on the island itself
 - **Map edits** (31 ADT tiles) with the missing-texture cubes and floating blocks removed
 - **Spirit healer** on the island (same gossip/resurrection as every other spirit healer); dying on the island releases you there
@@ -29,7 +29,7 @@ This repo holds only the Fading Island work, not the client or the server.
 About 380 doodads referenced by the map do not exist in the CoA client either, so they stay invisible; see `data/models-missing-from-client.txt`.
 
 ## Editing in Noggit
-`FadingIsland-Noggit-Project-v1.0.zip` is the project folder, made with ShadowWorld-Noggit v1.4.6 (the fork that loads `patch-[4-9]/[A-Z]` archives). Put `patch-ZZZZZB.MPQ` in your Noggit client's `Data/`, set `ClientPath` in `Fading island.noggitproj`, open it. Keep `uid.ini`. Note: the project still contains the three static elevator doodads (tiles 39_27, 39_26, 37_26) placed as visual markers; the working elevators are server transports, so the client patch shrinks those static copies to nothing. Do the same (or delete it) before exporting tiles, or you will see two elevators. Ground-effect doodads, textures and models are all bundled in ZZZZZB.
+`FadingIsland-Noggit-Project-v1.0.zip` is the project folder, made with ShadowWorld-Noggit v1.4.6 (the fork that loads `patch-[4-9]/[A-Z]` archives). Put `patch-ZZZZZB.MPQ` in your Noggit client's `Data/`, set `ClientPath` in `Fading island.noggitproj`, open it. Keep `uid.ini`. Note: the project still contains the static elevator doodads (tiles 39_27, 39_26, 37_26, 41_30) placed as visual markers; the working elevators are server transports, so the client patch shrinks those static copies to nothing. Do the same (or delete it) before exporting tiles, or you will see two elevators. Ground-effect doodads, textures and models are all bundled in ZZZZZB.
 `FadingIsland-OptionalClientDBCs-v1.0.zip`: the client DBCs holding map 907 rows (Map, AreaTable, Light*, ...), only for clients that lack them.
 
 ## Install

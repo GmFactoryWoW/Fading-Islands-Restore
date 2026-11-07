@@ -16,7 +16,8 @@ print('tiles taken from your Noggit project:',n)
 
 # the elevator doodad is replaced by the moving server transport: shrink the static copy to nothing
 import json,struct
-for el in (json.load(open('C:/CoA-Build/boats/elevscan.json')) if os.path.exists('C:/CoA-Build/boats/elevscan.json') else []):
+_used=set(json.load(open('C:/CoA-Build/boats/elevators_used.json'))) if os.path.exists('C:/CoA-Build/boats/elevators_used.json') else None
+for el in [e for e in (json.load(open('C:/CoA-Build/boats/elevscan.json')) if os.path.exists('C:/CoA-Build/boats/elevscan.json') else []) if _used is None or e['uid'] in _used]:
     fn='C:/CoA-Build/boats/out/adt/AzzarArchipelago_%s.adt'%el['tile']
     if os.path.exists(fn):
         d=bytearray(open(fn,'rb').read());i=0

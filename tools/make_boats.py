@@ -77,16 +77,18 @@ EL_WAIT = 20
 # model suffix -> path id, GO entry, GODI display id, floor height above the model origin (collision mesh, before scale), top floor feet z (None = ironforge .gps), speed, name
 ELEVS = [dict(suf='ironforgeelevator.m2', pid=2003, go=9900110, disp=561, foff=1.1, top=190.2109, spd=22, nm='Fading Island Elevator', legacy=True),
          dict(suf='cf_elevatorplatform.m2', pid=2004, go=9900111, disp=7043, foff=1.5, top=352.9547, spd=63, nm='Fading Island Elevator (Coilfang)', scale=0.55, topxy=(2770.644, -4119.61)),
+         dict(suf='ord_orgrimmar_elevator_01.m2', uid=163976, pid=2006, go=9900113, disp=1041787, foff=-0.2, top=297.0, spd=27, nm='Fading Island Elevator (Orgrimmar Depths)'),
          dict(suf='fading_island_valkyr_entrance_elevator_01.m2', pid=2005, go=9900112, disp=1041789, foff=0.5, top=897.0, spd=27, nm='Fading Island Elevator (Valkyr Entrance)')]
 _scan = _jj.load(open(B + 'elevscan.json')) if os.path.exists(B + 'elevscan.json') else []
 ELS = []
 for c in ELEVS:
-    m = [e for e in _scan if e['model'].endswith(c['suf'])]
+    m = [e for e in _scan if e['model'].endswith(c['suf']) and e['uid'] == c.get('uid', e['uid'])]
     if m:
         e = dict(m[0])
         if 'scale' in c:      # smaller model: keep the floor where it was
             e['z'] += c['foff'] * (e['scale'] - c['scale']); e['scale'] = c['scale']
         ELS.append((e, c['pid'], c['go'], c['disp'], c['foff'], c['top'], c['spd'], c['nm'], c))
+_jj.dump([x[0]['uid'] for x in ELS], open(B + 'elevators_used.json', 'w'))   # sync_map hides only these static doodads
 for (EL, EL_PATH, EL_GO, EL_DISPLAY, foff, top, spd, nm, cfg) in ELS:
     z0 = EL['z']; z1 = top - foff * EL['scale']
     nodes = [r for r in nodes if r[1] != EL_PATH]; paths = [r for r in paths if r[0] != EL_PATH]
