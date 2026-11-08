@@ -77,7 +77,8 @@ EL_WAIT = 20
 # model suffix -> path id, GO entry, GODI display id, floor height above the model origin (collision mesh, before scale), top floor feet z (None = ironforge .gps), speed, name
 ELEVS = [dict(suf='ironforgeelevator.m2', pid=2003, go=9900110, disp=561, foff=1.1, top=190.2109, spd=22, nm='Fading Island Elevator', legacy=True),
          dict(suf='8du_nzothraid_elevator01.m2', uid=163977, pid=2004, go=9900111, disp=1058424, foff=5.4, top=352.9547, spd=63, nm='Fading Island Elevator (NZoth Raid)', topxy=(2770.644, -4119.61)),
-         dict(suf='fading_island_valkyr_entrance_elevator_01.m2', pid=2005, go=9900112, disp=1041789, foff=0.5, top=892.87, z0feet=822.72, spd=27, nm='Fading Island Elevator (Valkyr Entrance)')]
+         dict(suf='ord_orgrimmar_elevator_01.m2', uid=163976, pid=2006, go=9900113, disp=1041787, foff=-0.2, top=144.78, spd=27, nm='Fading Island Elevator (Orgrimmar Depths)'),
+         dict(suf='fading_island_valkyr_entrance_elevator_01.m2', pid=2005, go=9900112, disp=1041789, foff=0.5, top=892.87, spd=27, nm='Fading Island Elevator (Valkyr Entrance)')]
 _scan = _jj.load(open(B + 'elevscan.json')) if os.path.exists(B + 'elevscan.json') else []
 ELS = []
 for c in ELEVS:
@@ -103,8 +104,10 @@ for (EL, EL_PATH, EL_GO, EL_DISPLAY, foff, top, spd, nm, cfg) in ELS:
         # The core builds a Catmull-Rom spline through the nodes: a short segment next to a long one makes it overshoot (the platform dipped under the floor
         # and shot above the top), so every segment is the same length and the stops have mirrored neighbours (tangent 0). The cycle starts at the top so the
         # wrap-around joins two identical points (no sink). The core drops the last node's segment and ignores a stop on the first/last frame.
+        # The first and last nodes are only spline control points: the real path runs from node 1 to the second-to-last node and then wraps to node 1,
+        # so the real path must END where it STARTS (the top stop), otherwise the platform pops from the last point to the first.
         K = 4
-        lv = [K - 1, K] + list(range(K - 1, 0, -1)) + [0] + list(range(1, K)) + [K - 1]
+        lv = [K - 1, K] + list(range(K - 1, 0, -1)) + [0] + list(range(1, K)) + [K, K - 1]
         stop = {1, 1 + K}                      # index of the top stop, index of the bottom stop
         L = z1 - z0; pts = []
         for i, l in enumerate(lv):
