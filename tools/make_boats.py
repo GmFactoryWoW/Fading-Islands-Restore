@@ -76,7 +76,7 @@ import json as _jj
 EL_WAIT = 20
 # model suffix -> path id, GO entry, GODI display id, floor height above the model origin (collision mesh, before scale), top floor feet z (None = ironforge .gps), speed, name
 ELEVS = [dict(suf='ironforgeelevator.m2', pid=2003, go=9900110, disp=561, foff=1.1, top=190.2109, spd=22, nm='Fading Island Elevator', legacy=True),
-         dict(suf='8du_nzothraid_elevator01.m2', uid=163977, pid=2004, go=9900111, disp=1058424, foff=5.4, top=352.9547, spd=63, nm='Fading Island Elevator (NZoth Raid)', topxy=(2770.644, -4119.61)),
+         dict(suf='8du_nzothraid_elevator01.m2', uid=163977, pid=2004, go=9900111, disp=1058424, foff=4.66, top=353.517, z0feet=-0.9175, spd=63, nm='Fading Island Elevator (NZoth Raid)', topxy=(2770.644, -4119.61), turn=2.5),
          dict(suf='ord_orgrimmar_elevator_01.m2', uid=163976, pid=2006, go=9900113, disp=1041787, foff=-0.2, top=144.78, spd=27, nm='Fading Island Elevator (Orgrimmar Depths)'),
          dict(suf='fading_island_valkyr_entrance_elevator_01.m2', pid=2005, go=9900112, disp=1041789, foff=0.5, top=892.87, spd=27, nm='Fading Island Elevator (Valkyr Entrance)')]
 _scan = _jj.load(open(B + 'elevscan.json')) if os.path.exists(B + 'elevscan.json') else []
@@ -108,6 +108,33 @@ for (EL, EL_PATH, EL_GO, EL_DISPLAY, foff, top, spd, nm, cfg) in ELS:
         # loops, so both must see the same motion: the path starts and ends at the top stop and the first/last nodes sit a hair from their neighbour
         # (a far control point made the client go up-down-up-down). A tiny segment next to a long one makes the spline dip, but for a few ms only.
         # Interior segments are equal length and the bottom stop has mirrored neighbours (no overshoot).
+        if 'turn' in cfg:
+            # Straight shaft between the two stops. A path that goes back along the same line turns the platform 180 deg when it starts moving (the core and
+            # the client face the travel direction), so each end has a small half-circle: the platform turns while it is moving and rests already facing the way it leaves.
+            r = cfg['turn']; bx, by = EL['x'], EL['y']; tx, ty = cfg['topxy']
+            hl = math.hypot(tx - bx, ty - by); dx, dy = (tx - bx) / hl, (ty - by) / hl; px, py = -dy, dx
+            fr = [0, .015, .035, .07, .14, .30, .50, .70, .86, .93, .965, .985, 1.0]
+            def arc(c, a0, sgn, z):       # semicircle: sgn=+1 top (bulges forward), -1 bottom
+                out = []
+                for th in (45, 90, 135):
+                    t = math.radians(th)
+                    out.append((c[0] + r * (-sgn * px * math.cos(t) + sgn * dx * math.sin(t)), c[1] + r * (-sgn * py * math.cos(t) + sgn * dy * math.sin(t)), z))
+                return out
+            P1 = (tx - 2 * r * px, ty - 2 * r * py); Q1 = (bx + 2 * r * px, by + 2 * r * py)
+            pts = [(tx, ty, z1 + 0.05, 0, 0), (tx, ty, z1, 2, EL_WAIT)]
+            for f in fr[1:]:                                    # descent along the line T -> Q1
+                pts.append((tx + (Q1[0] - tx) * f, ty + (Q1[1] - ty) * f, z1 + (z0 - z1) * f, 0, 0))
+            C = (Q1[0] - r * px, Q1[1] - r * py)                  # bottom half-circle Q1 -> B, bulging below the stop
+            pts += [(x, y, z, 0, 0) for (x, y, z) in arc(C, 0, -1, z0)]
+            pts.append((bx, by, z0, 2, EL_WAIT))
+            for f in fr[1:]:                                    # ascent along the line B -> P1
+                pts.append((bx + (P1[0] - bx) * f, by + (P1[1] - by) * f, z0 + (z1 - z0) * f, 0, 0))
+            C = (P1[0] + r * px, P1[1] + r * py)                  # top half-circle P1 -> T, bulging past the stop
+            pts += [(x, y, z, 0, 0) for (x, y, z) in arc(C, 0, 1, z1)]
+            pts.append((tx, ty, z1, 0, 0)); pts.append((tx, ty, z1 + 0.05, 0, 0))
+            for i, (x, y, z, af, dl) in enumerate(pts):
+                nodes.append([nid, EL_PATH, i, 907, f2u(x), f2u(y), f2u(z), af, dl, 0, 0]); nid += 1
+            paths.append([EL_PATH, 34, 80, 0]); continue
         K = 4
         lv = [K, K] + list(range(K - 1, 0, -1)) + [0] + list(range(1, K)) + [K, K]
         stop = {1, 1 + K}                      # index of the top stop, index of the bottom stop
