@@ -76,8 +76,7 @@ import json as _jj
 EL_WAIT = 20
 # model suffix -> path id, GO entry, GODI display id, floor height above the model origin (collision mesh, before scale), top floor feet z (None = ironforge .gps), speed, name
 ELEVS = [dict(suf='ironforgeelevator.m2', pid=2003, go=9900110, disp=561, foff=1.1, top=190.2109, spd=22, nm='Fading Island Elevator', legacy=True),
-         dict(suf='cf_elevatorplatform.m2', pid=2004, go=9900111, disp=7043, foff=1.5, top=352.9547, spd=63, nm='Fading Island Elevator (Coilfang)', scale=0.55, topxy=(2770.644, -4119.61)),
-         dict(suf='ord_orgrimmar_elevator_01.m2', uid=163976, pid=2006, go=9900113, disp=1041787, foff=-0.2, top=144.78, spd=27, nm='Fading Island Elevator (Orgrimmar Depths)'),
+         dict(suf='8du_nzothraid_elevator01.m2', uid=163977, pid=2004, go=9900111, disp=1058424, foff=5.4, top=352.9547, spd=63, nm='Fading Island Elevator (NZoth Raid)', topxy=(2770.644, -4119.61)),
          dict(suf='fading_island_valkyr_entrance_elevator_01.m2', pid=2005, go=9900112, disp=1041789, foff=0.5, top=892.87, z0feet=822.72, spd=27, nm='Fading Island Elevator (Valkyr Entrance)')]
 _scan = _jj.load(open(B + 'elevscan.json')) if os.path.exists(B + 'elevscan.json') else []
 ELS = []

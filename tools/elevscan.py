@@ -1,6 +1,6 @@
 import struct,glob,os,json,re
 P='C:/Users/ilusi/OneDrive/Documents/custom map Fading Island/world/maps/azzararchipelago/'
-want=('ord_orgrimmar_elevator_01.m2','ironforgeelevator.m2','cf_elevatorplatform.m2','fading_island_valkyr_entrance_elevator_01.m2')
+want=('8du_nzothraid_elevator01.m2','ord_orgrimmar_elevator_01.m2','ironforgeelevator.m2','cf_elevatorplatform.m2','fading_island_valkyr_entrance_elevator_01.m2')
 out=[];allm=[]
 for f in sorted(glob.glob(P+'*.adt')):
     d=open(f,'rb').read();i=0;ch={}
