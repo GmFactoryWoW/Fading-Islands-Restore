@@ -5,7 +5,7 @@
 Restores the Fading Island (map 907) for a WoW 3.3.5a / CoA server:
 
 - **2 working boats** – Booty Bay <-> Hardluck and Ratchet <-> Hardluck (goblin ships, GO 9900101 / 9900102, taxi paths 2001 / 2002)
-- **4 working elevators** replacing static Noggit doodads: Ironforge-style (GO 9900110, path 2003), Coilfang platform (GO 9900111, path 2004, up the cliff to z 390) Valkyr entrance (GO 9900112, path 2005, up to z 897) and Orgrimmar depths (GO 9900113, path 2006, up to z 297)
+- **4 working elevators** replacing static Noggit doodads: Ironforge-style (GO 9900110, path 2003), Coilfang platform (GO 9900111, path 2004, up the cliff to z 390) Valkyr entrance (GO 9900112, path 2005, up to z 893) and Orgrimmar depths (GO 9900113, path 2006, up to z 145)
 - **Goblin passenger NPCs on the boats** (party outfits, random dance/emotes/voices). No allied or hostile NPCs on the island itself
 - **Map edits** (31 ADT tiles) with the missing-texture cubes and floating blocks removed
 - **Spirit healer** on the island (same gossip/resurrection as every other spirit healer); dying on the island releases you there

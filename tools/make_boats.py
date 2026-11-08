@@ -77,8 +77,8 @@ EL_WAIT = 20
 # model suffix -> path id, GO entry, GODI display id, floor height above the model origin (collision mesh, before scale), top floor feet z (None = ironforge .gps), speed, name
 ELEVS = [dict(suf='ironforgeelevator.m2', pid=2003, go=9900110, disp=561, foff=1.1, top=190.2109, spd=22, nm='Fading Island Elevator', legacy=True),
          dict(suf='cf_elevatorplatform.m2', pid=2004, go=9900111, disp=7043, foff=1.5, top=352.9547, spd=63, nm='Fading Island Elevator (Coilfang)', scale=0.55, topxy=(2770.644, -4119.61)),
-         dict(suf='ord_orgrimmar_elevator_01.m2', uid=163976, pid=2006, go=9900113, disp=1041787, foff=-0.2, top=297.0, spd=27, nm='Fading Island Elevator (Orgrimmar Depths)'),
-         dict(suf='fading_island_valkyr_entrance_elevator_01.m2', pid=2005, go=9900112, disp=1041789, foff=0.5, top=897.0, spd=27, nm='Fading Island Elevator (Valkyr Entrance)')]
+         dict(suf='ord_orgrimmar_elevator_01.m2', uid=163976, pid=2006, go=9900113, disp=1041787, foff=-0.2, top=144.78, spd=27, nm='Fading Island Elevator (Orgrimmar Depths)'),
+         dict(suf='fading_island_valkyr_entrance_elevator_01.m2', pid=2005, go=9900112, disp=1041789, foff=0.5, top=892.87, z0feet=822.72, spd=27, nm='Fading Island Elevator (Valkyr Entrance)')]
 _scan = _jj.load(open(B + 'elevscan.json')) if os.path.exists(B + 'elevscan.json') else []
 ELS = []
 for c in ELEVS:
@@ -90,7 +90,7 @@ for c in ELEVS:
         ELS.append((e, c['pid'], c['go'], c['disp'], c['foff'], c['top'], c['spd'], c['nm'], c))
 _jj.dump([x[0]['uid'] for x in ELS], open(B + 'elevators_used.json', 'w'))   # sync_map hides only these static doodads
 for (EL, EL_PATH, EL_GO, EL_DISPLAY, foff, top, spd, nm, cfg) in ELS:
-    z0 = EL['z']; z1 = top - foff * EL['scale']
+    z0 = EL['z'] if 'z0feet' not in cfg else cfg['z0feet'] - foff * EL['scale']; z1 = top - foff * EL['scale']
     nodes = [r for r in nodes if r[1] != EL_PATH]; paths = [r for r in paths if r[0] != EL_PATH]
     nid = max(r[0] for r in nodes) + 1
     if cfg.get('legacy'):
@@ -101,18 +101,21 @@ for (EL, EL_PATH, EL_GO, EL_DISPLAY, foff, top, spd, nm, cfg) in ELS:
         seq = [(0.0, z0, 0, 0), (D, z0 + 0.05, 2, EL_WAIT), (2 * D, z1, 2, EL_WAIT), (3 * D, (z0 + z1) / 2, 0, 0), (4 * D, z0 + 0.05, 0, 0), (5 * D, z0 + 0.05, 0, 0)]
         pts = [(EL['x'] + ux * e, EL['y'] + uy * e, z, af, dl) for (e, z, af, dl) in seq]
     else:
-        # evenly spaced collinear nodes, mirrored around both stops (a spline through a reversal overshoots: that was the rise-then-drop and the shaking)
-        # the core drops the last node's segment and ignores a stop on the first/last frame
-        L = z1 - z0; g = 0.3 / L
-        fr = [(g, 0, 0), (0, 2, EL_WAIT), (g, 0, 0), (1 / 3, 0, 0), (2 / 3, 0, 0), (1 - g, 0, 0), (1, 2, EL_WAIT), (1 - g, 0, 0), (2 / 3, 0, 0), (1 / 3, 0, 0), (g, 0, 0), (g, 0, 0)]
-        pts = []
-        if 'topxy' in cfg:   # slanted shaft: the platform follows the line from its spot to the top spot (the yaw then follows the travel direction)
-            for (f, af, dl) in fr:
-                pts.append((EL['x'] + (cfg['topxy'][0] - EL['x']) * f, EL['y'] + (cfg['topxy'][1] - EL['y']) * f, z0 + L * f, af, dl))
-        else:                # vertical: a 5 cm drift per node along the doodad's own yaw keeps the model's yaw fixed (the core faces atan2(dir)+pi)
-            ua = math.radians(EL['rot'][1] + 180.0) - math.pi; ux, uy = math.cos(ua), math.sin(ua)
-            for i, (f, af, dl) in enumerate(fr):
-                pts.append((EL['x'] + ux * 0.05 * i, EL['y'] + uy * 0.05 * i, z0 + L * f, af, dl))
+        # The core builds a Catmull-Rom spline through the nodes: a short segment next to a long one makes it overshoot (the platform dipped under the floor
+        # and shot above the top), so every segment is the same length and the stops have mirrored neighbours (tangent 0). The cycle starts at the top so the
+        # wrap-around joins two identical points (no sink). The core drops the last node's segment and ignores a stop on the first/last frame.
+        K = 4
+        lv = [K - 1, K] + list(range(K - 1, 0, -1)) + [0] + list(range(1, K)) + [K - 1]
+        stop = {1, 1 + K}                      # index of the top stop, index of the bottom stop
+        L = z1 - z0; pts = []
+        for i, l in enumerate(lv):
+            f = l / K; z = z0 + L * f
+            af, dl = (2, EL_WAIT) if i in stop else (0, 0)
+            if 'topxy' in cfg:   # slanted shaft: the platform follows the line from its spot to the top spot (the yaw then follows the travel direction)
+                pts.append((EL['x'] + (cfg['topxy'][0] - EL['x']) * f, EL['y'] + (cfg['topxy'][1] - EL['y']) * f, z, af, dl))
+            else:                # vertical: a tiny drift per node along the doodad's own yaw keeps the model's yaw fixed (the core faces atan2(dir)+pi)
+                ua = math.radians(EL['rot'][1] + 180.0) - math.pi
+                pts.append((EL['x'] + math.cos(ua) * 0.04 * i, EL['y'] + math.sin(ua) * 0.04 * i, z, af, dl))
     for i, (x, y, z, af, dl) in enumerate(pts):
         nodes.append([nid, EL_PATH, i, 907, f2u(x), f2u(y), f2u(z), af, dl, 0, 0]); nid += 1
     paths.append([EL_PATH, 34, 80, 0])
