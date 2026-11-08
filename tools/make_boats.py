@@ -104,20 +104,22 @@ for (EL, EL_PATH, EL_GO, EL_DISPLAY, foff, top, spd, nm, cfg) in ELS:
         # The core builds a Catmull-Rom spline through the nodes: a short segment next to a long one makes it overshoot (the platform dipped under the floor
         # and shot above the top), so every segment is the same length and the stops have mirrored neighbours (tangent 0). The cycle starts at the top so the
         # wrap-around joins two identical points (no sink). The core drops the last node's segment and ignores a stop on the first/last frame.
-        # The first and last nodes are only spline control points: the real path runs from node 1 to the second-to-last node and then wraps to node 1,
-        # so the real path must END where it STARTS (the top stop), otherwise the platform pops from the last point to the first.
+        # The server plays nodes 1..N-2 (the first and last are only spline control points) and wraps to node 1, but the CLIENT plays every node and
+        # loops, so both must see the same motion: the path starts and ends at the top stop and the first/last nodes sit a hair from their neighbour
+        # (a far control point made the client go up-down-up-down). A tiny segment next to a long one makes the spline dip, but for a few ms only.
+        # Interior segments are equal length and the bottom stop has mirrored neighbours (no overshoot).
         K = 4
-        lv = [K - 1, K] + list(range(K - 1, 0, -1)) + [0] + list(range(1, K)) + [K, K - 1]
+        lv = [K, K] + list(range(K - 1, 0, -1)) + [0] + list(range(1, K)) + [K, K]
         stop = {1, 1 + K}                      # index of the top stop, index of the bottom stop
         L = z1 - z0; pts = []
         for i, l in enumerate(lv):
-            f = l / K; z = z0 + L * f
+            f = l / K; z = z0 + L * f + (0.05 if i in (0, len(lv) - 1) else 0.0)
             af, dl = (2, EL_WAIT) if i in stop else (0, 0)
             if 'topxy' in cfg:   # slanted shaft: the platform follows the line from its spot to the top spot (the yaw then follows the travel direction)
                 pts.append((EL['x'] + (cfg['topxy'][0] - EL['x']) * f, EL['y'] + (cfg['topxy'][1] - EL['y']) * f, z, af, dl))
             else:                # vertical: a tiny drift per node along the doodad's own yaw keeps the model's yaw fixed (the core faces atan2(dir)+pi)
                 ua = math.radians(EL['rot'][1] + 180.0) - math.pi
-                pts.append((EL['x'] + math.cos(ua) * 0.04 * i, EL['y'] + math.sin(ua) * 0.04 * i, z, af, dl))
+                pts.append((EL['x'] + math.cos(ua) * 0.06 * i, EL['y'] + math.sin(ua) * 0.06 * i, z, af, dl))
     for i, (x, y, z, af, dl) in enumerate(pts):
         nodes.append([nid, EL_PATH, i, 907, f2u(x), f2u(y), f2u(z), af, dl, 0, 0]); nid += 1
     paths.append([EL_PATH, 34, 80, 0])
