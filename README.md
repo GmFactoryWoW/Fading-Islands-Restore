@@ -41,6 +41,6 @@ Release assets: `patch-ZZZZZA.MPQ` (client) and `FadingIslandsRestore-v1.0.zip` 
 Core patches: `island-graveyard-zone0` (graveyards for map 907, which has no zone/area), `transport-animation-kick` (makes the custom transports start animating) and `ferry-detach-on-fall` (detaches players who fall off the ship).
 
 ## Credits / notes
-jealous-sound, the CoAC team, svenbledt and Pitho.
+Ascension Team,jealous-sound,the CoAC team, svenbledt and Pitho.
 
 Game assets belong to Blizzard Entertainment. scaled and fixed with the included tools..
